@@ -8,14 +8,14 @@
 
 cc-snapshot takes snapshots of baremetal instances on the Chameleon testbed.
 
-## Dependencies
+### Dependencies
 
 The script requires the following dependencies:
 
 * Ubuntu or CentOS system
 * Baremetal instance
 
-## Usage
+### Usage
 
 **Use this script from a Chameleon baremetal instance**. To snapshot a baremetal instance, when logged into the instance via SSH, run cc-snapshot with the following command:
 
@@ -29,13 +29,26 @@ cc-snapshot will ask for your Chameleon password, and after a few minutes, a sna
 
 # sync_file and sync_folder
 
-## ~/nodes file
+### Dependencies
 
+* **[MPSSH - Mass Parallel Secure Shell](https://github.com/ndenev/mpssh)**.
+MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel. To install MPSSH:
+
+    * On CentOS:
+        ```
+        sudo yum install mpssh
+        ```
+    * On Ubuntu:
+        ```
+        sudo apt-get install mpssh
+        ```
+
+* **~/nodes file**.
 ~/nodes plays an very important role. It is expected to keep record of hostnames of all nodes created by you. sync_file and sync_folder replie on it. **You need to be sure that all nodes are listed in the file.**
 
-sync_file and sync_folder are two command created to synchronize files across all nodes. Since there is no shared global file system in Chameleon, files which are supposed to the same across all nodes (e.g. executables, configurations)  need to be synchronized.
+sync_file and sync_folder are two commands created to synchronize files across all nodes. Since there is no shared global file system in Chameleon, files which are supposed to the same across all nodes (e.g. executables, configurations)  need to be synchronized when any copy on any node is modified.
 
-## Usage:
+### Usage:
 
 ```
 sync_file [-q|--quiet] file
@@ -46,4 +59,4 @@ sync_folder [-q|--quiet] path
 
 # sync_hosts.sh
 
-sync_hosts.sh is script to generate /etc/hosts file and synchronize across all nodes so that each node knows its siblings. sync_hosts.sh relies on ~/nodes file as well. **Please be sure ~/nodes has all nodes listed.**
+sync_hosts.sh is script to generate /etc/hosts file and synchronize across all nodes so that each node knows its siblings. It needs to be run once when all nodes boot up or new nodes are added. sync_hosts.sh relies on ~/nodes file as well. **Please be sure ~/nodes has all nodes listed.**
