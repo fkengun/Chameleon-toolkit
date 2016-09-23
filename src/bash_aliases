@@ -1,0 +1,101 @@
+# .bash_aliases
+
+sync_folder() {
+  if [[ $# == 0 ]]
+  then
+    echo "Usage: sync_folder [-q|--quiet] path"
+    return
+  fi
+
+  nodes=`cat ~/nodes | awk '{print $1}'`
+  my_ip=`ifconfig 2>&1 | grep 'broadcast\|Bcast' | awk -F ' ' {'print $2'} | head -n 1 | sed -e 's/addr://g'`
+  QUIET=NO
+  while [[ $# > 0 ]]
+  do
+    key="$1"
+
+    case $key in
+      -q|--quiet)
+        QUIET=YES
+        ;;
+      -h|--help)
+        echo "Usage: sync_folder [-q|--quiet] path"
+        return # past argument
+        ;;
+      --default)
+        DEFAULT=YES
+        ;;
+      *)
+        path=$key # paths
+        ;;
+    esac
+    shift # past argument or value
+  done
+  local_path=`realpath "$path"`
+  remote_path=`dirname "$local_path"`
+  for node in $nodes
+  do
+    if [ $node == $my_ip ]
+    then
+      continue
+    fi
+
+    if [ $QUIET == YES ]
+    then
+      ssh $node "mkdir -p $remote_path"
+      scp -r -q $local_path $node:$remote_path
+    else
+      ssh -q $node "mkdir -p $remote_path"
+      scp -r $local_path $node:$remote_path
+    fi
+  done
+}
+sync_file() {
+  if [[ $# == 0 ]]
+  then
+    echo "Usage: sync_file [-q|--quiet] file"
+    return
+  fi
+
+  nodes=`cat ~/nodes | awk '{print $1}'`
+  my_ip=`ifconfig 2>&1 | grep 'broadcast\|Bcast' | awk -F ' ' {'print $2'} | head -n 1 | sed -e 's/addr://g'`
+  QUIET=NO
+  while [[ $# > 0 ]]
+  do
+    key="$1"
+
+    case $key in
+      -q|--quiet)
+        QUIET=YES
+        ;;
+      -h|--help)
+        echo "Usage: sync_file [-q|--quiet] file"
+        return # past argument
+        ;;
+      --default)
+        DEFAULT=YES
+        ;;
+      *)
+        file=$key # files
+        ;;
+    esac
+    shift # past argument or value
+  done
+  path=`realpath "$file"`
+  for node in $nodes
+  do
+    if [ $node == $my_ip ]
+    then
+      continue
+    fi
+
+    if [ $QUIET == YES ]
+    then
+      scp -r -q $path $node:$path
+    else
+      scp -r $path $node:$path
+    fi
+  done
+}
+
+alias svim='vim -u NONE'
