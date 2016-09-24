@@ -12,13 +12,13 @@ os_project=os.environ.get('OS_TENANT_NAME')
 
 if os_password is None or os_auth_url is None or os_username is None or os_project is None:
   sys.stderr.write("env not found, please source your openrc file first\n")
-  sys.exit(0)
+  sys.exit(-1)
 
 nova = client.Client("2", os_username, os_password, os_project, os_auth_url)
 
 my_servers = nova.servers.list() #search_opts={'OS-EXT-AZ:availability_zone':reservation_name})
 
-username = 'kun'
+username = raw_input("Enter the string used to filter out your instances: ")
 
 for server in my_servers:
     server_dict = server.to_dict()
@@ -28,3 +28,4 @@ for server in my_servers:
         if len(addresses) >= 1:
           if username in server.name or username.upper() in server.name:
             print "%s\t%s" % (addresses[0], server.name.lower())
+sys.exit(0)

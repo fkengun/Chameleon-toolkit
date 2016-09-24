@@ -1,6 +1,10 @@
 #!/bin/bash
 
-python ~/novahosts.py | sort > /etc/hosts
+res=`python ~/novahosts.py | sort`
+if [[ $res != 0 ]] then
+  echo "Fail to run novahosts.py"
+  exit
+fi
 cat /etc/hosts | awk '{print $2}' > ~/nodes
 
 HOSTS=`cat /etc/hosts | grep -v ib | awk '{print $2}'`
