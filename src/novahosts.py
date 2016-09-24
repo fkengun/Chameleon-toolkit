@@ -18,14 +18,16 @@ nova = client.Client("2", os_username, os_password, os_project, os_auth_url)
 
 my_servers = nova.servers.list() #search_opts={'OS-EXT-AZ:availability_zone':reservation_name})
 
-username = raw_input("Enter the string used to filter out your instances: ")
+username = sys.argv[1]
 
-for server in my_servers:
+with open('/etc/hosts', 'w') as f:
+  for server in my_servers:
     server_dict = server.to_dict()
     ips = nova.servers.ips(server)
     for key in ips.keys():
-        addresses = server.networks[key]
-        if len(addresses) >= 1:
-          if username in server.name or username.upper() in server.name:
-            print "%s\t%s" % (addresses[0], server.name.lower())
+      addresses = server.networks[key]
+      if len(addresses) >= 1:
+        if username in server.name or username.upper() in server.name:
+          f.write("%s\t%s\n" % (addresses[0], server.name.lower()))
+  f.close()
 sys.exit(0)

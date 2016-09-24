@@ -1,9 +1,12 @@
 #!/bin/bash
 
-res=`python ~/novahosts.py | sort`
-if [[ $res != 0 ]] then
+echo "Enter the string used to filter out your instances: "
+read grep_str
+res=`python ~/novahosts.py $grep_str 2>&1`
+if [[ $res ]]
+then
   echo "Fail to run novahosts.py"
-  exit
+  exit -1
 fi
 cat /etc/hosts | awk '{print $2}' > ~/nodes
 
