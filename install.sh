@@ -15,7 +15,9 @@ else
 fi
 
 # Install aliases (sync_file, sync_folder)
-cp src/bash_aliases ~/.bash_aliases
+echo "# Start of commands for file and directory synchronization" >> ~/.bash_aliases
+cat src/bash_aliases >> ~/.bash_aliases
+echo "# End of commands for file and directory synchronization" >> ~/.bash_aliases
 
 # Install sync_hosts.sh
 cp src/novahosts.py ~/
