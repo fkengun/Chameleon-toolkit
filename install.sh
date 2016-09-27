@@ -15,6 +15,9 @@ else
 fi
 
 # Install aliases (sync_file, sync_folder)
+sline=`cat ~/.bash_aliases | grep -n 'directory synchronization' | head -1 | cut -d':' -f1`
+eline=`cat ~/.bash_aliases | grep -n 'directory synchronization' | tail -1 | cut -d':' -f1`
+sed -i "$sline,$eline d" ~/.bash_aliases
 echo "# Start of commands for file and directory synchronization" >> ~/.bash_aliases
 cat src/bash_aliases >> ~/.bash_aliases
 echo "# End of commands for file and directory synchronization" >> ~/.bash_aliases

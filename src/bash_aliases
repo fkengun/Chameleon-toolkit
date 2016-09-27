@@ -97,5 +97,3 @@ sync_file() {
     fi
   done
 }
-
-alias svim='vim -u NONE'
