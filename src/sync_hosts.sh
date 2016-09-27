@@ -1,13 +1,34 @@
 #!/bin/bash
 
-echo "Enter the string used to filter out your instances: "
-read grep_str
-res=`python ~/novahosts.py $grep_str 2>&1`
-if [[ $res ]]
-then
-  echo "Fail to run novahosts.py"
-  exit -1
-fi
+while true
+do
+  echo "Enter the string used to filter out your instances: "
+  read grep_str
+  res=`python ~/novahosts.py $grep_str 2>&1`
+  if [[ $res ]]
+  then
+    echo $res
+    echo "Fail to run novahosts.py"
+    exit -1
+  fi
+  nins=`cat /etc/hosts | wc -l`
+  if [[ $nins == 0 ]]
+  then
+    echo No instance found
+    continue
+  fi
+  echo "These are the instances:"
+  cat /etc/hosts
+  echo "Are they correct? [yes/no]:"
+  read correct
+  if [[ "$correct" == "yes" ]]
+  then
+    break
+  elif [[ "$correct" == "no" ]]
+  then
+    continue
+  fi
+done
 cat /etc/hosts | awk '{print $2}' > ~/nodes
 
 HOSTS=`cat /etc/hosts | grep -v ib | awk '{print $2}'`
@@ -35,4 +56,4 @@ do
 done
 
 echo "Synchronizing ..."
-mpssh -bf ~/nodes "sudo mv ~/hosts /etc/hosts" > /dev/null 2>&1
+mpssh -bf ~/nodes "sudo mv /home/cc/hosts /etc/hosts" > /dev/null 2>&1
