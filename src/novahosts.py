@@ -20,7 +20,7 @@ my_servers = nova.servers.list() #search_opts={'OS-EXT-AZ:availability_zone':res
 
 username = sys.argv[1]
 
-with open('/etc/hosts', 'w') as f:
+with open('/dev/shm/hosts', 'w') as f:
   for server in my_servers:
     server_dict = server.to_dict()
     ips = nova.servers.ips(server)
@@ -29,5 +29,6 @@ with open('/etc/hosts', 'w') as f:
       if len(addresses) >= 1:
         if username in server.name or username.upper() in server.name:
           f.write("%s\t%s\n" % (addresses[0], server.name.lower()))
+  f.flush()
   f.close()
 sys.exit(0)

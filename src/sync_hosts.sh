@@ -11,18 +11,19 @@ do
     echo "Fail to run novahosts.py"
     exit -1
   fi
-  nins=`cat /etc/hosts | wc -l`
+  nins=`cat /dev/shm/hosts | wc -l`
   if [[ $nins == 0 ]]
   then
     echo No instance found
     continue
   fi
   echo "These are the instances:"
-  cat /etc/hosts
+  cat /dev/shm/hosts
   echo "Are they correct? [yes/no]:"
   read correct
   if [[ "$correct" == "yes" ]]
   then
+    cat /dev/shm/hosts > /etc/hosts && rm /dev/shm/hosts
     break
   elif [[ "$correct" == "no" ]]
   then
