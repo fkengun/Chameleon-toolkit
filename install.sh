@@ -22,7 +22,9 @@ if [[ -f ~/.bash_aliases ]]
 then
   sline=`cat ~/.bash_aliases | grep -n 'directory synchronization' | head -1 | cut -d':' -f1`
   eline=`cat ~/.bash_aliases | grep -n 'directory synchronization' | tail -1 | cut -d':' -f1`
-  sed -i "$sline,$eline d" ~/.bash_aliases
+  if [[ $sline ]] && [[ $eline ]]; then
+    sed -i "$sline,$eline d" ~/.bash_aliases
+  fi
 fi
 echo "# Start of commands for file and directory synchronization" >> ~/.bash_aliases
 cat src/bash_aliases >> ~/.bash_aliases
