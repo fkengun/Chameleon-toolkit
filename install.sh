@@ -24,6 +24,15 @@ fi
 echo "# Start of commands for file and directory synchronization" >> ~/.bash_aliases
 cat src/bash_aliases >> ~/.bash_aliases
 echo "# End of commands for file and directory synchronization" >> ~/.bash_aliases
+source ~/.bashrc
+
+# Enable aliases
+if [[ -f ~/.bashrc ]] && ! grep -Fq ". ~/.bash_aliases" ~/.bashrc
+then
+  echo "if [[ -f ~/.bash_aliases ]]; then" >> ~/.bashrc
+  echo -e "\t. ~/.bash_aliases" >> ~/.bashrc
+  echo "fi" >> ~/.bashrc
+fi
 
 # Install sync_hosts.sh
 cp src/novahosts.py ~/
