@@ -39,6 +39,7 @@ cp src/novahosts.py ~/
 cp src/sync_hosts.sh ~/
 
 echo "Chameleon Toolkit is installed"
+echo ""
 echo "*****************************************************************************"
 echo -e "Scripts and Commands\t\tNotes"
 echo "-----------------------------------------------------------------------------"

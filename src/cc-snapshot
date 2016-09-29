@@ -15,22 +15,11 @@ fi
 
 #: ${OS_PASSWORD?"Need to set OS_PASSWORD"}
 
-realuser="kun"
-
 set -eu
 set -o pipefail
 
 HOSTNAME=$(hostname)
 UUID=$(uuidgen)
-
-date=`date +20%y%m%d`
-if [ $# -eq 0 ]; then
-    SNAPSHOT_NAME="${realuser}-snapshot-$date"
-else
-    SNAPSHOT_NAME="$1"
-fi
-
-echo "Will snapshot the instance using the following name: '$SNAPSHOT_NAME'"
 
 IS_UBUNTU=$(UNAME_OUTPUT=$(uname -a | tr '[:upper:]' '[:lower:]' | grep ubuntu); if [ "$UNAME_OUTPUT" != "" ]; then echo "true"; else echo "false"; fi)
 if [ -z ${var+x} ]; then
@@ -110,6 +99,15 @@ EOM
 
 # Source the file that has been generated above
 source /tmp/openrc
+
+date=`date +20%y%m%d`
+if [ $# -eq 0 ]; then
+    SNAPSHOT_NAME="$OS_USERNAME"
+else
+    SNAPSHOT_NAME="$1"
+fi
+
+echo "Will snapshot the instance using the following name: '$SNAPSHOT_NAME'"
 
 # set -x
 
