@@ -102,7 +102,7 @@ source /tmp/openrc
 
 date=`date +20%y%m%d`
 if [ $# -eq 0 ]; then
-    SNAPSHOT_NAME="$OS_USERNAME"
+    SNAPSHOT_NAME="${OS_USERNAME}-snapshot-${date}"
 else
     SNAPSHOT_NAME="$1"
 fi
