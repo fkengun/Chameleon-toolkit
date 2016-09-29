@@ -14,6 +14,9 @@ else
   exit
 fi
 
+# Check if MPSSH is installed
+command -v mpssh > /dev/null 2>&1 || { echo >&2 "MPSSH is required. Aborting."; exit 1; }
+
 # Install fm.sh
 cp src/fm.sh ~/fm.sh
 
