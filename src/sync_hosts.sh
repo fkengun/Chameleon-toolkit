@@ -23,7 +23,7 @@ do
   read correct
   if [[ "$correct" == "yes" ]]
   then
-    cat /dev/shm/hosts > /etc/hosts && rm /dev/shm/hosts
+    sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts
     break
   elif [[ "$correct" == "no" ]]
   then
