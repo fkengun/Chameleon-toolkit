@@ -14,6 +14,9 @@ else
   exit
 fi
 
+# Install fm.sh
+cp src/fm.sh ~/fm.sh
+
 # Install aliases (sync_file, sync_folder)
 if [[ -f ~/.bash_aliases ]]
 then
