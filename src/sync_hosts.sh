@@ -35,7 +35,7 @@ cat /etc/hosts | awk '{print $2}' > ~/nodes
 HOSTS=`cat /etc/hosts | grep -v ib | awk '{print $2}'`
 IPS=`cat /etc/hosts | grep -v ib | awk '{print $1}'`
 
-rm ~/.ssh/known_hosts
+rm -f ~/.ssh/known_hosts
 for host in $HOSTS
 do
   ssh-keyscan -H $host >> ~/.ssh/known_hosts
