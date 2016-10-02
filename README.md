@@ -2,7 +2,6 @@
 * cc-snapshot
 * sync_file and sync_folder command
 * sync_hosts.sh
-***
 
 # cc-snapshot
 
@@ -39,9 +38,7 @@ MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel.
         sudo yum install mpssh
         ```
     * On Ubuntu:
-        ```
-        sudo apt-get install mpssh
-        ```
+        There is no MPSSH in official repo. Please build it from source code.
 
 * **~/nodes file**.
 ~/nodes plays an very important role. It is expected to keep record of hostnames of all nodes created by you. sync_file and sync_folder replie on it. **You need to be sure that all nodes are listed in the file.**
