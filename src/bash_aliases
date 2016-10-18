@@ -97,3 +97,74 @@ sync_file() {
     fi
   done
 }
+
+collect() {
+  if [[ $# == 0 ]]
+  then
+    echo "Usage: collect [-q|--quiet] file [{-t|--target} target_path]"
+    return
+  fi
+
+  nodes=`cat ~/nodes | awk '{print $1}'`
+  quiet=NO
+  target_path=.
+  while [[ $# > 0 ]]
+  do
+    key="$1"
+
+    case $key in
+      -q|--quiet)
+        quiet=YES
+        ;;
+      -t|--target)
+        target_path="$2"
+        shift
+        ;;
+      -h|--help)
+        echo "Usage: collect [-q|--quiet] file [{-t|--target} target_path]"
+        return # past argument
+        ;;
+      --default)
+        DEFAULT=YES
+        ;;
+      *)
+        file=$key # files
+        ;;
+    esac
+    shift # past argument or value
+  done
+  path=`realpath "$file"`
+  target_path=`realpath $target_path`
+  filename=$(basename $path)
+  if [[ -d $file ]]
+  then
+    srcdir=`realpath $file`
+  else
+    srcdir=`dirname $file/ | xargs realpath`
+  fi
+  if [[ $target_path == *"$srcdir"* ]]
+  then
+    echo "ERROR: Target path $target_path is in source path $srcdir"
+    return
+  fi
+
+  for node in $nodes
+  do
+    if [ $quiet == YES ]
+    then
+      if [[ -d $target_path/$filename-$node ]]
+      then
+        scp -r -q $node:$path/* $target_path/$filename-$node/
+      else
+        scp -r -q $node:$path $target_path/$filename-$node
+      fi
+    else
+      if [[ -d $target_path/$filename-$node ]]
+      then
+        scp -r $node:$path/* $target_path/$filename-$node/
+      else
+        scp -r $node:$path $target_path/$filename-$node
+      fi
+    fi
+  done
+}
