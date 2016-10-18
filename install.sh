@@ -45,13 +45,14 @@ fi
 # Install sync_hosts.sh
 cp src/novahosts.py ~/
 cp src/sync_hosts.sh ~/
+cp src/cc-snapshot ~/
 
 echo "Chameleon Toolkit is installed"
 echo ""
 echo "*****************************************************************************"
 echo -e "Scripts and Commands\t\tNotes"
 echo "-----------------------------------------------------------------------------"
-echo -e "sync_hosts.sh: \t\t\tgenerate /etc/hosts file to wire up instances"
+echo -e "~/sync_hosts.sh: \t\t\tgenerate /etc/hosts file to wire up instances"
+echo -e "~/cc-snapshot: \t\t\tmake an image"
 echo -e "sync_file/sync_folder: \t\tsynchronize file/path"
-echo -e "cc-snapshot: \t\t\tmake an image"
 echo "*****************************************************************************"
