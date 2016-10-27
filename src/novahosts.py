@@ -32,8 +32,10 @@ with open('/dev/shm/hosts', 'w') as f:
         server_dict = server.to_dict()
         if ( major < 3 ):
             if username.lower() in server.name.lower():
-                ip = server_dict.get('addresses').get('sharednet1')[0].get('addr')
-                f.write("%s\t%s\n" % (ip, server.name.lower()))
+                addrs = server_dict.get('addresses')
+                if addrs:
+                  ip = addrs.get('sharednet1')[0].get('addr')
+                  f.write("%s\t%s\n" % (ip, server.name.lower()))
         else:
             ips = nova.servers.ips(server)
             for key in ips.keys():

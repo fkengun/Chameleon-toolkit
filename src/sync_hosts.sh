@@ -30,7 +30,7 @@ do
     continue
   fi
 done
-cat /etc/hosts | awk '{print $2}' > ~/nodes
+cat /etc/hosts | awk '{print $2}' | sort > ~/nodes
 
 HOSTS=`cat /etc/hosts | grep -v ib | awk '{print $2}'`
 IPS=`cat /etc/hosts | grep -v ib | awk '{print $1}'`
