@@ -43,10 +43,10 @@ sync_folder() {
     if [ $QUIET == YES ]
     then
       ssh $node "mkdir -p $remote_path"
-      scp -r -q $local_path $node:$remote_path
+      rsync -raz $local_path $node:$remote_path
     else
       ssh -q $node "mkdir -p $remote_path"
-      scp -r $local_path $node:$remote_path
+      rsync -ravz $local_path $node:$remote_path
     fi
   done
 }
@@ -91,9 +91,9 @@ sync_file() {
 
     if [ $QUIET == YES ]
     then
-      scp -r -q $path $node:$path
+      rsync -raz -q $path $node:$path
     else
-      scp -r $path $node:$path
+      rsync -ravz $path $node:$path
     fi
   done
 }
@@ -154,16 +154,16 @@ collect() {
     then
       if [[ -d $target_path/$filename-$node ]]
       then
-        scp -r -q $node:$path/* $target_path/$filename-$node/
+        rsync -raz $node:$path/* $target_path/$filename-$node/
       else
-        scp -r -q $node:$path $target_path/$filename-$node
+        rsync -raz $node:$path $target_path/$filename-$node
       fi
     else
       if [[ -d $target_path/$filename-$node ]]
       then
-        scp -r $node:$path/* $target_path/$filename-$node/
+        rsync -ravz $node:$path/* $target_path/$filename-$node/
       else
-        scp -r $node:$path $target_path/$filename-$node
+        rsync -ravz $node:$path $target_path/$filename-$node
       fi
     fi
   done
