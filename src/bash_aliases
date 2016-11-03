@@ -57,6 +57,8 @@ sync_file() {
     return
   fi
 
+  file_count=0
+  file_list=
   nodes=`cat ~/nodes | awk '{print $1}'`
   my_ip=`ifconfig 2>&1 | grep 'broadcast\|Bcast' | awk -F ' ' {'print $2'} | head -n 1 | sed -e 's/addr://g'`
   QUIET=NO
@@ -76,12 +78,20 @@ sync_file() {
         DEFAULT=YES
         ;;
       *)
-        file=$key # files
+        file_list[$file_count]=$key # files
+        ((file_count=file_count+1)) # add expanded files to list
         ;;
     esac
     shift # past argument or value
   done
-  path=`realpath "$file"`
+  #echo files from input ${file_list[@]}
+  count=0
+  for file in ${file_list[@]}
+  do
+    path_list[$count]=`realpath $file`
+    ((count=count+1))
+  done
+  #echo files after realpath ${path_list[@]}
   for node in $nodes
   do
     if [ $node == $my_ip ]
@@ -89,12 +99,15 @@ sync_file() {
       continue
     fi
 
-    if [ $QUIET == YES ]
-    then
-      rsync -raz -q $path $node:$path
-    else
-      rsync -ravz $path $node:$path
-    fi
+    for path in ${path_list[@]}
+    do
+      if [ $QUIET == YES ]
+      then
+        rsync -raz -q $path $node:$path
+      else
+        rsync -ravz $path $node:$path
+      fi
+    done
   done
 }
 
