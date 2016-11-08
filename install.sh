@@ -5,15 +5,34 @@ echo Installing Chameleon Toolkit ...
 # Install SSH key
 if [ -f keys/id_rsa ] && [ -f keys/id_rsa.pub ]
 then
-  cp keys/id_rsa ~/.ssh/id_rsa
-  chmod 600 ~/.ssh/id_rsa
-  cp keys/id_rsa.pub ~/.ssh/id_rsa.pub
-  chmod 644 ~/.ssh/id_rsa.pub
+  if [ -f ~/.ssh/id_rsa ] && [ -f ~/.ssh/id_rsa.pub ]
+  then
+    diff_pri=`diff keys/id_rsa ~/.ssh/id_rsa`
+    diff_pub=`diff keys/id_rsa.pub ~/.ssh/id_rsa.pub`
+    if [[ ${#diff_pri} != 0 || ${#diff_pub} != 0 ]]
+    then
+      echo "Keys in ./keys and ~/.ssh are different"
+      echo "Continue to install? [yes/no]"
+      read cont
+      if [[ "$cont" == "yes" ]]
+      then
+        echo 'Overwriting ...'
+        cp keys/id_rsa ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        cp keys/id_rsa.pub ~/.ssh/id_rsa.pub
+        chmod 644 ~/.ssh/id_rsa.pub
+      else
+        echo 'No overwrite, exit'
+        exit
+      fi
+    fi
+  fi
 else
   echo Please put your SSH keys into folder keys
   exit
 fi
 
+exit
 # Check if MPSSH is installed
 command -v mpssh > /dev/null 2>&1 || { echo >&2 "MPSSH is required. Aborting."; exit 1; }
 
