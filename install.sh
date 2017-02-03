@@ -7,8 +7,8 @@ if [ -f keys/id_rsa ] && [ -f keys/id_rsa.pub ]
 then
   if [ -f ~/.ssh/id_rsa ] && [ -f ~/.ssh/id_rsa.pub ]
   then
-    diff_pri=`diff keys/id_rsa ~/.ssh/id_rsa`
-    diff_pub=`diff keys/id_rsa.pub ~/.ssh/id_rsa.pub`
+    diff_pri=`diff keys/id_rsa ~/.ssh/id_rsa 2>&1`
+    diff_pub=`diff keys/id_rsa.pub ~/.ssh/id_rsa.pub 2>&1`
     if [[ ${#diff_pri} != 0 || ${#diff_pub} != 0 ]]
     then
       echo "Keys in ./keys and ~/.ssh are different"
@@ -25,14 +25,21 @@ then
         echo 'No overwrite, exit'
         exit
       fi
+    else
+      echo 'Keys already exist and match with the pair in ./keys'
     fi
+  else
+    echo 'Copying keys into ~/.ssh ...'
+    cp keys/id_rsa ~/.ssh/id_rsa
+    chmod 600 ~/.ssh/id_rsa
+    cp keys/id_rsa.pub ~/.ssh/id_rsa.pub
+    chmod 644 ~/.ssh/id_rsa.pub
   fi
 else
   echo Please put your SSH keys into folder keys
   exit
 fi
 
-exit
 # Check if MPSSH is installed
 command -v mpssh > /dev/null 2>&1 || { echo >&2 "MPSSH is required. Aborting."; exit 1; }
 
@@ -66,6 +73,7 @@ cp src/novahosts.py ~/
 cp src/sync_hosts.sh ~/
 cp src/cc-snapshot ~/
 
+echo ""
 echo "Chameleon Toolkit is installed"
 echo ""
 echo "*****************************************************************************"
