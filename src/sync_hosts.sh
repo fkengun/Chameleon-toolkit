@@ -1,35 +1,60 @@
 #!/bin/bash
 
-while true
+NO_HOSTS_UPDATE=NO
+while [[ $# > 0 ]]
 do
-  echo "Enter the string used to filter out your instances: "
-  read grep_str
-  res=`python ~/novahosts.py $grep_str 2>&1`
-  if [[ $res ]]
-  then
-    echo $res
-    echo "Fail to run novahosts.py"
-    exit -1
-  fi
-  nins=`cat /dev/shm/hosts | wc -l`
-  if [[ $nins == 0 ]]
-  then
-    echo No instance found
-    continue
-  fi
-  echo "These are the instances:"
-  cat /dev/shm/hosts
-  echo "Are they correct? [yes/no]:"
-  read correct
-  if [[ "$correct" == "yes" ]]
-  then
-    sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts
-    break
-  elif [[ "$correct" == "no" ]]
-  then
-    continue
-  fi
+  key="$1"
+
+  case $key in
+    -e|--exist-hosts)
+      NO_HOSTS_UPDATE=YES
+      ;;
+    -h|--help)
+      echo "Usage: sync_folder [-q|--quiet] path"
+      return # past argument
+      ;;
+    --default)
+      DEFAULT=YES
+      ;;
+    *)
+      ;;
+  esac
+  shift # past argument or value
 done
+
+if [ $NO_HOSTS_UPDATE == NO ]
+then
+  while true
+  do
+    echo "Enter the string used to filter out your instances: "
+    read grep_str
+    res=`python ~/novahosts.py $grep_str 2>&1`
+    if [[ $res ]]
+    then
+      echo $res
+      echo "Fail to run novahosts.py"
+      exit -1
+    fi
+    nins=`cat /dev/shm/hosts | wc -l`
+    if [[ $nins == 0 ]]
+    then
+      echo No instance found
+      continue
+    fi
+    echo "These are the instances:"
+    cat /dev/shm/hosts
+    echo "Are they correct? [yes/no]:"
+    read correct
+    if [[ "$correct" == "yes" ]]
+    then
+      sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts
+      break
+    elif [[ "$correct" == "no" ]]
+    then
+      continue
+    fi
+  done
+fi
 cat /etc/hosts | awk '{print $2}' | sort > ~/nodes
 
 HOSTS=`cat /etc/hosts | grep -v ib | awk '{print $2}'`
