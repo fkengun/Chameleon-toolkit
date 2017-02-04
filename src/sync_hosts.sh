@@ -74,11 +74,12 @@ done
 for host in $HOSTS
 do
   echo "Copying to node $host ..."
-  scp -q /etc/hosts $host:/home/cc/hosts
-  scp -q ~/nodes $host:/home/cc/nodes
-  scp -q ~/.ssh/* $host:/home/cc/.ssh/
-  scp -q ~/.bashrc $host:/home/cc/.bashrc
-  scp -q ~/.bash_aliases $host:/home/cc/.bash_aliases
+  rsync -az /etc/hosts $host:/home/cc/hosts &
+  rsync -az ~/nodes $host:/home/cc/nodes &
+  rsync -az ~/.ssh/* $host:/home/cc/.ssh/ &
+  rsync -az ~/.bashrc $host:/home/cc/.bashrc &
+  rsync -az ~/.bash_aliases $host:/home/cc/.bash_aliases &
+  wait
 done
 
 echo "Synchronizing ..."
