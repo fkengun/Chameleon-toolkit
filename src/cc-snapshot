@@ -248,12 +248,9 @@ qemu-img convert /tmp/snapshot.qcow2 -O qcow2 /tmp/snapshot_compressed.qcow2 -c
 ################################
 
 # The final steps are to upload your snapshot image to OpenStack Glance.
-<<<<<<< HEAD:src/cc-snapshot
 echo "${green}[7/7] Uploading image ...${reset}"
-glance image-create --progress --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare < /tmp/snapshot_compressed.qcow2
-=======
 if [ "$PARTITION_IMAGE" == false ]; then
-    glance image-create --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare < /tmp/snapshot_compressed.qcow2
+    glance image-create --progress --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare < /tmp/snapshot_compressed.qcow2
 else
     echo "You asked for a partition image."
     echo "You will need to upload your kernel and ramdisk to Glance before uploading your image."
@@ -261,6 +258,5 @@ else
     echo "After kernel and ramdisk are uploaded, run:"
     echo "glance image-create --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare --property kernel_id=IMAGE_VMLINUZ_UUID --property ramdisk_id=IMAGE_INITRD_UUID < /tmp/snapshot_compressed.qcow2"
 fi
->>>>>>> upstream/master:cc-snapshot
 
 exit 0
