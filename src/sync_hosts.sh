@@ -79,8 +79,8 @@ do
   rsync -az ~/.ssh/* $host:/home/cc/.ssh/ &
   rsync -az ~/.bashrc $host:/home/cc/.bashrc &
   rsync -az ~/.bash_aliases $host:/home/cc/.bash_aliases &
-  wait
 done
+wait
 
 echo "Synchronizing ..."
 mpssh -bf ~/nodes "sudo mv /home/cc/hosts /etc/hosts" > /dev/null 2>&1
