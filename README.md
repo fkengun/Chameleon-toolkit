@@ -72,6 +72,6 @@ MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel.
 
 ### Dependencies
 
-Your OpenStack RC file from Chameleon needs to sourced to collect your username and password. Please download it from [HERE](https://chi.tacc.chameleoncloud.org/dashboard/project/access_and_security/) using the "Download OpenStack RC File" button.
+Your OpenStack RC file from Chameleon needs to sourced to collect your username and password. Please download it from [HERE (TACC)](https://chi.tacc.chameleoncloud.org/dashboard/project/access_and_security/) or [HERE (UC)](https://chi.uc.chameleoncloud.org/dashboard/project/access_and_security/) using the "Download OpenStack RC File" button in "API Access" tab.
 
 `sync_hosts.sh` is script to generate `/etc/hosts` file and synchronize across all nodes so that each node knows its siblings. It needs to be run once when all nodes boot up or new nodes are added. `sync_hosts.sh` relies on `~/nodes` file as well. **Please be sure `~/nodes` has all nodes listed.**
