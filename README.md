@@ -1,6 +1,6 @@
 # Tools
 * cc-snapshot
-* sync_file and sync_folder command
+* commands (`sync_file`, `sync_folder`, `collect`)
 * sync_hosts.sh
 
 # cc-snapshot
@@ -26,26 +26,20 @@ You can optionally specify a snapshot name. If no argument is present, the snaps
 
 cc-snapshot will ask for your Chameleon password, and after a few minutes, a snapshot will be uploaded in the image repository of the instance's site (UC or TACC).
 
-# sync_file and sync_folder
+# Commands
 
 ### Dependencies
 
 * **~/nodes file**.
-~/nodes plays an very important role. It is expected to keep record of hostnames of all nodes created by you. sync_file and sync_folder replie on it. **You need to be sure that all nodes are listed in the file.**
+`~/nodes` plays an very important role. It is expected to keep record of hostnames of all nodes created by you. All following commands rely on it. **You need to be sure that all nodes are listed in the file.**
 
-sync_file and sync_folder are two commands created to synchronize files across all nodes. Since there is no shared global file system in Chameleon, files which are supposed to the same across all nodes (e.g. executables, configurations)  need to be synchronized when any copy on any node is modified.
+### sync_file and sync_folder
 
-### Optional packages
+`sync_file` and `sync_folder` are two commands created to synchronize files across all nodes. Since there is no shared global file system in Chameleon, files which are supposed to the same across all nodes (e.g. executables, configurations) need to be synchronized when any copy on any node is modified.
 
-* **[MPSSH - Mass Parallel Secure Shell](https://github.com/ndenev/mpssh)**.
-MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel. To install MPSSH:
+### collect
 
-    * On CentOS:
-        ```
-        sudo yum install mpssh
-        ```
-    * On Ubuntu:
-        There is no MPSSH in official repo. Please build it from source code.
+`collect` is the command to gather files in the same path across all nodes to one node. This is usually used when node-local files (e.g. data, logs, configurations) need to be opened in one node.
 
 ### Usage:
 
@@ -60,8 +54,24 @@ sync_folder [-q|--quiet] path
 collect [-q|--quiet] file [{-t|--target} target_path]
 ```
 
-**The default target path is current directory**
+**If the target path is not specified, the current directory will be set as the default target path**
 
+### Optional packages
+
+**[MPSSH - Mass Parallel Secure Shell](https://github.com/ndenev/mpssh)**
+MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel. To install MPSSH:
+
+* On CentOS:
+    ```
+    sudo yum install mpssh
+    ```
+* On Ubuntu:
+    There is no MPSSH in official repo. Please build it from source code.
+    
 # sync_hosts.sh
 
-sync_hosts.sh is script to generate /etc/hosts file and synchronize across all nodes so that each node knows its siblings. It needs to be run once when all nodes boot up or new nodes are added. sync_hosts.sh relies on ~/nodes file as well. **Please be sure ~/nodes has all nodes listed.**
+### Dependencies
+
+Your OpenStack RC file from Chameleon needs to sourced to collect your username and password. Please download it from [HERE](https://chi.tacc.chameleoncloud.org/dashboard/project/access_and_security/) using the "Download OpenStack RC File" button.
+
+`sync_hosts.sh` is script to generate `/etc/hosts` file and synchronize across all nodes so that each node knows its siblings. It needs to be run once when all nodes boot up or new nodes are added. `sync_hosts.sh` relies on `~/nodes` file as well. **Please be sure `~/nodes` has all nodes listed.**
