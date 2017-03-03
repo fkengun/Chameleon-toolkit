@@ -57,4 +57,12 @@ do
 done
 
 echo "Synchronizing ..."
-mpssh -bf ~/nodes "sudo mv /home/cc/hosts /etc/hosts" > /dev/null 2>&1
+if mpssh > /dev/null 2>&1
+then
+  mpssh -bf ~/nodes "sudo mv /home/cc/hosts /etc/hosts" > /dev/null 2>&1
+else
+  for host in ${HOSTS[@]}
+  do
+    ssh $host "sudo mv /home/cc/hosts /etc/hosts"
+  done
+fi

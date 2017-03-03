@@ -30,6 +30,13 @@ cc-snapshot will ask for your Chameleon password, and after a few minutes, a sna
 
 ### Dependencies
 
+* **~/nodes file**.
+~/nodes plays an very important role. It is expected to keep record of hostnames of all nodes created by you. sync_file and sync_folder replie on it. **You need to be sure that all nodes are listed in the file.**
+
+sync_file and sync_folder are two commands created to synchronize files across all nodes. Since there is no shared global file system in Chameleon, files which are supposed to the same across all nodes (e.g. executables, configurations)  need to be synchronized when any copy on any node is modified.
+
+### Optional packages
+
 * **[MPSSH - Mass Parallel Secure Shell](https://github.com/ndenev/mpssh)**.
 MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel. To install MPSSH:
 
@@ -40,11 +47,6 @@ MPSSH can spawn multiple processes to SSH to nodes and run commands in parallel.
     * On Ubuntu:
         There is no MPSSH in official repo. Please build it from source code.
 
-* **~/nodes file**.
-~/nodes plays an very important role. It is expected to keep record of hostnames of all nodes created by you. sync_file and sync_folder replie on it. **You need to be sure that all nodes are listed in the file.**
-
-sync_file and sync_folder are two commands created to synchronize files across all nodes. Since there is no shared global file system in Chameleon, files which are supposed to the same across all nodes (e.g. executables, configurations)  need to be synchronized when any copy on any node is modified.
-
 ### Usage:
 
 ```
@@ -53,6 +55,12 @@ sync_folder [-q|--quiet] path
 ```
 
 **Only one file/path is supported currently. If multiple files/paths are given, only the first one will be synchronized**
+
+```
+collect [-q|--quiet] file [{-t|--target} target_path]
+```
+
+**The default target path is current directory**
 
 # sync_hosts.sh
 
