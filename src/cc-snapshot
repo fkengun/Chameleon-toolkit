@@ -212,7 +212,6 @@ if [ "$PARTITION_IMAGE" == false ]; then
     VIRT_MAKE_FS="virt-make-fs --partition"
 else
     VIRT_MAKE_FS="virt-make-fs"
->>>>>>> upstream/master:cc-snapshot
 fi
 
 # This will take 3 to 5 minutes. Next, convert the tar file into a qcow2 image (if you don't want to use the XFS file system, you can replace xfs by ext4):
