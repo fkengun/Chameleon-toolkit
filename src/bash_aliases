@@ -103,12 +103,13 @@ sync_file() {
     do
       if [ $QUIET == YES ]
       then
-        rsync -raz -q $path $node:$path
+        rsync -raz -q $path $node:$path &
       else
-        rsync -ravz $path $node:$path
+        rsync -ravz $path $node:$path &
       fi
     done
   done
+  wait
 }
 
 collect() {
@@ -167,17 +168,18 @@ collect() {
     then
       if [[ -d $target_path/$filename-$node ]]
       then
-        rsync -raz $node:$path/* $target_path/$filename-$node/
+        rsync -raz $node:$path/* $target_path/$filename-$node/ &
       else
-        rsync -raz $node:$path $target_path/$filename-$node
+        rsync -raz $node:$path $target_path/$filename-$node &
       fi
     else
       if [[ -d $target_path/$filename-$node ]]
       then
-        rsync -ravz $node:$path/* $target_path/$filename-$node/
+        rsync -ravz $node:$path/* $target_path/$filename-$node/ &
       else
-        rsync -ravz $node:$path $target_path/$filename-$node
+        rsync -ravz $node:$path $target_path/$filename-$node &
       fi
     fi
   done
+  wait
 }
