@@ -8,7 +8,7 @@ sync_folder() {
   fi
 
   nodes=`cat ~/nodes | awk '{print $1}'`
-  my_ip=`ifconfig 2>&1 | grep 'broadcast\|Bcast' | awk -F ' ' {'print $2'} | head -n 1 | sed -e 's/addr://g'`
+  my_ip=`hostname`
   QUIET=NO
   while [[ $# > 0 ]]
   do
@@ -33,6 +33,16 @@ sync_folder() {
   done
   local_path=`realpath "$path"`
   remote_path=`dirname "$local_path"`
+
+  if [ $QUIET == YES ]
+  then
+    ssh_options="-q"
+    rsync_options="-razq"
+  else
+    ssh_options=""
+    rsync_options="-razv"
+  fi
+
   for node in $nodes
   do
     if [ $node == $my_ip ]
@@ -40,14 +50,8 @@ sync_folder() {
       continue
     fi
 
-    if [ $QUIET == YES ]
-    then
-      ssh $node "mkdir -p $remote_path"
-      scp -r -q $local_path $node:$remote_path
-    else
-      ssh -q $node "mkdir -p $remote_path"
-      scp -r $local_path $node:$remote_path
-    fi
+    ssh $ssh_options $node "mkdir -p $remote_path"
+    rsync $rsync_options $local_path $node:$remote_path
   done
 }
 sync_file() {
@@ -57,8 +61,10 @@ sync_file() {
     return
   fi
 
+  file_count=0
+  file_list=
   nodes=`cat ~/nodes | awk '{print $1}'`
-  my_ip=`ifconfig 2>&1 | grep 'broadcast\|Bcast' | awk -F ' ' {'print $2'} | head -n 1 | sed -e 's/addr://g'`
+  my_ip=`hostname`
   QUIET=NO
   while [[ $# > 0 ]]
   do
@@ -76,12 +82,27 @@ sync_file() {
         DEFAULT=YES
         ;;
       *)
-        file=$key # files
+        file_list[$file_count]=$key # files
+        ((file_count=file_count+1)) # add expanded files to list
         ;;
     esac
     shift # past argument or value
   done
-  path=`realpath "$file"`
+
+  count=0
+  for file in ${file_list[@]}
+  do
+    path_list[$count]=`realpath $file`
+    ((count=count+1))
+  done
+
+  if [ $QUIET == YES ]
+  then
+    options="-razq"
+  else
+    options="-razv"
+  fi
+
   for node in $nodes
   do
     if [ $node == $my_ip ]
@@ -89,12 +110,10 @@ sync_file() {
       continue
     fi
 
-    if [ $QUIET == YES ]
-    then
-      scp -r -q $path $node:$path
-    else
-      scp -r $path $node:$path
-    fi
+    for path in ${path_list[@]}
+    do
+      rsync $options $path $node:$path
+    done
   done
 }
 
@@ -148,23 +167,20 @@ collect() {
     return
   fi
 
+  if [ $QUIET == YES ]
+  then
+    options="-razq"
+  else
+    options="-razv"
+  fi
+
   for node in $nodes
   do
-    if [ $quiet == YES ]
+    if [[ -d $target_path/$filename-$node ]]
     then
-      if [[ -d $target_path/$filename-$node ]]
-      then
-        scp -r -q $node:$path/* $target_path/$filename-$node/
-      else
-        scp -r -q $node:$path $target_path/$filename-$node
-      fi
+      rsync $options $node:$path/* $target_path/$filename-$node/
     else
-      if [[ -d $target_path/$filename-$node ]]
-      then
-        scp -r $node:$path/* $target_path/$filename-$node/
-      else
-        scp -r $node:$path $target_path/$filename-$node
-      fi
+      rsync $options $node:$path $target_path/$filename-$node
     fi
   done
 }
