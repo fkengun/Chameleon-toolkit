@@ -33,6 +33,16 @@ sync_folder() {
   done
   local_path=`realpath "$path"`
   remote_path=`dirname "$local_path"`
+
+  if [ $QUIET == YES ]
+  then
+    ssh_options="-q"
+    rsync_options="-razq"
+  else
+    ssh_options=""
+    rsync_options="-razv"
+  fi
+
   for node in $nodes
   do
     if [ $node == $my_ip ]
@@ -40,14 +50,8 @@ sync_folder() {
       continue
     fi
 
-    if [ $QUIET == YES ]
-    then
-      ssh $node "mkdir -p $remote_path"
-      rsync -raz $local_path $node:$remote_path
-    else
-      ssh -q $node "mkdir -p $remote_path"
-      rsync -ravz $local_path $node:$remote_path
-    fi
+    ssh $ssh_options $node "mkdir -p $remote_path"
+    rsync $rsync_options $local_path $node:$remote_path
   done
 }
 sync_file() {
@@ -92,6 +96,14 @@ sync_file() {
     ((count=count+1))
   done
   #echo files after realpath ${path_list[@]}
+
+  if [ $QUIET == YES ]
+  then
+    options="-razq"
+  else
+    options="-razv"
+  fi
+
   for node in $nodes
   do
     if [ $node == $my_ip ]
@@ -101,12 +113,7 @@ sync_file() {
 
     for path in ${path_list[@]}
     do
-      if [ $QUIET == YES ]
-      then
-        rsync -raz -q $path $node:$path &
-      else
-        rsync -ravz $path $node:$path &
-      fi
+      rsync $options $path $node:$path &
     done
   done
   wait
@@ -162,23 +169,20 @@ collect() {
     return
   fi
 
+  if [ $QUIET == YES ]
+  then
+    options="-razq"
+  else
+    options="-razv"
+  fi
+
   for node in $nodes
   do
-    if [ $quiet == YES ]
+    if [[ -d $target_path/$filename-$node ]]
     then
-      if [[ -d $target_path/$filename-$node ]]
-      then
-        rsync -raz $node:$path/* $target_path/$filename-$node/ &
-      else
-        rsync -raz $node:$path $target_path/$filename-$node &
-      fi
+      rsync $options $node:$path/* $target_path/$filename-$node/ &
     else
-      if [[ -d $target_path/$filename-$node ]]
-      then
-        rsync -ravz $node:$path/* $target_path/$filename-$node/ &
-      else
-        rsync -ravz $node:$path $target_path/$filename-$node &
-      fi
+      rsync $options $node:$path $target_path/$filename-$node &
     fi
   done
   wait
