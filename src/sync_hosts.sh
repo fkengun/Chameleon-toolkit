@@ -74,7 +74,7 @@ done
 for host in $HOSTS
 do
   echo "Copying to node $host ..."
-  rsync -az /etc/hosts $host:/home/cc/hosts &
+  rsync -az /etc/hosts $host:/tmp/hosts &
   rsync -az ~/nodes $host:/home/cc/nodes &
   rsync -az ~/.ssh/* $host:/home/cc/.ssh/ &
   rsync -az ~/.bashrc $host:/home/cc/.bashrc &
@@ -85,10 +85,12 @@ wait
 echo "Synchronizing ..."
 if mpssh > /dev/null 2>&1
 then
-  mpssh -bf ~/nodes "sudo mv /home/cc/hosts /etc/hosts" > /dev/null 2>&1
+  mpssh -bf ~/nodes "sudo mv /tmp/hosts /etc/hosts" > /dev/null 2>&1
 else
   for host in ${HOSTS[@]}
   do
     ssh $host "sudo mv /home/cc/hosts /etc/hosts"
   done
 fi
+
+echo "Done"
