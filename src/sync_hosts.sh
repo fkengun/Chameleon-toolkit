@@ -89,7 +89,7 @@ then
 else
   for host in ${HOSTS[@]}
   do
-    ssh $host "sudo mv /home/cc/hosts /etc/hosts"
+    ssh $host "sudo mv /tmp/hosts /etc/hosts"
   done
 fi
 
