@@ -51,7 +51,7 @@ HOSTNAME=$(hostname)
 UUID=$(uuidgen)
 
 IS_UBUNTU=$(UNAME_OUTPUT=$(uname -a | tr '[:upper:]' '[:lower:]' | grep ubuntu); if [ "$UNAME_OUTPUT" != "" ]; then echo "true"; else echo "false"; fi)
-if [ -z ${var+x} ]; then
+if [ "$IS_UBUNTU" == true ]; then
     UBUNTU_VERSION=$(lsb_release -c | awk '{print $2}')
 else
     UBUNTU_VERSION=""
