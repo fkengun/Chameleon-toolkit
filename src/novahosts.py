@@ -12,7 +12,7 @@ if len(sys.argv) != 2:
 os_password=os.environ.get('OS_PASSWORD')
 os_auth_url=os.environ.get('OS_AUTH_URL')
 os_username=os.environ.get('OS_USERNAME')
-os_project=os.environ.get('OS_TENANT_ID')
+os_project=os.environ.get('OS_PROJECT_NAME')
 
 if os_password is None or os_auth_url is None or os_username is None or os_project is None:
     sys.stderr.write("env not found, please source your openrc file first\n")
