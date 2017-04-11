@@ -49,7 +49,7 @@ done
 for host in $HOSTS
 do
   echo "Copying to node $host ..."
-  scp -q /etc/hosts $host:/home/cc/hosts
+  scp -q /etc/hosts $host:/tmp/hosts
   scp -q ~/nodes $host:/home/cc/nodes
   scp -q ~/.ssh/* $host:/home/cc/.ssh/
   scp -q ~/.bashrc $host:/home/cc/.bashrc
@@ -59,10 +59,10 @@ done
 echo "Synchronizing ..."
 if mpssh > /dev/null 2>&1
 then
-  mpssh -bf ~/nodes "sudo mv /home/cc/hosts /etc/hosts" > /dev/null 2>&1
+  mpssh -bf ~/nodes "sudo mv /tmp/hosts /etc/hosts" > /dev/null 2>&1
 else
   for host in ${HOSTS[@]}
   do
-    ssh $host "sudo mv /home/cc/hosts /etc/hosts"
+    ssh $host "sudo mv /tmp/hosts /etc/hosts"
   done
 fi
