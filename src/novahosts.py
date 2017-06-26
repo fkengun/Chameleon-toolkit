@@ -4,15 +4,28 @@ import os
 from novaclient import client
 import novaclient
 import sys
+import platform
 
 if len(sys.argv) != 2:
     sys.stderr.write("Usage: python novahost.py [filter_string]\n")
     sys.exit(-2)
 
+IS_UBUNTU = False
+IS_CENTOS = False
+if 'ubuntu' in platform.linux_distribution()[0].lower():
+  IS_UBUNTU = True
+elif 'centos' in platform.linux_distribution()[0].lower():
+  IS_CENTOS = True
+
 os_password=os.environ.get('OS_PASSWORD')
 os_auth_url=os.environ.get('OS_AUTH_URL')
 os_username=os.environ.get('OS_USERNAME')
-os_project=os.environ.get('OS_PROJECT_NAME')
+if IS_CENTOS:
+  os_project=os.environ.get('OS_TENANT_ID')
+elif IS_UBUNTU:
+  os_project=os.environ.get('OS_PROJECT_NAME')
+else:
+  print 'Unsupported platform: {0}'.format(platform.linux_distribution()[0])
 
 if os_password is None or os_auth_url is None or os_username is None or os_project is None:
     sys.stderr.write("env not found, please source your openrc file first\n")
