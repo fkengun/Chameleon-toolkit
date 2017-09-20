@@ -147,7 +147,7 @@ echo "Will snapshot the instance using the following name: '$SNAPSHOT_NAME'"
 echo "${green}Installing prerequisite ...${reset}"
 if [ "$IS_CENTOS" == true ]; then
     # Install prerequisite software (only required for XFS file systems, which is the default on CentOS 7):
-    yum install -y libguestfs-xfs
+    yum install -y libguestfs-xfs lvm2
 fi
 
 # Create a tar file of the contents of your instance:
