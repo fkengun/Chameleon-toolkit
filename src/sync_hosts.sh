@@ -3,7 +3,7 @@
 while true
 do
   echo "Enter the string used to filter out your instances: "
-  read grep_str
+  read -e grep_str
   res=`python ~/novahosts.py $grep_str 2>&1`
   if [[ $res ]]
   then
@@ -20,7 +20,7 @@ do
   echo "These are the instances:"
   cat /dev/shm/hosts
   echo "Are they correct? [yes/no]:"
-  read correct
+  read -e correct
   if [[ "$correct" == "yes" ]]
   then
     sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts
