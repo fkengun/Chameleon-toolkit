@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import socket
 import argparse
 import subprocess
 import collections
@@ -46,12 +47,14 @@ def parse_cmd_args():
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-a", "--all", action="store_true",
       help="get host id, MAC and rack id of all nodes")
-  group.add_argument("-i", "--host",
+  group.add_argument("-i", "--hostid",
       help="get host id, MAC and rack id of host with given id")
   group.add_argument("-m", "--mac",
       help="get host id, MAC and rack id of host with MAC")
+  group.add_argument("-f", "--hostfile", type=str,
+      help="get host id, MAC and rack id of hosts in host file")
   args = parser.parse_args()
-  return args.all, args.host, args.mac
+  return args.all, args.hostid, args.mac, args.hostfile
 
 def run_cmd(command):
   process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
@@ -65,8 +68,21 @@ def write_list_to_file(l, file_name):
     f.flush()
     f.close()
 
+def searchHosts(hostfile):
+  with open(hostfile, 'r') as f:
+    for host in f:
+      mac, error = run_cmd("ssh %s 'if [ -e /sys/class/net/eth0/address ]; \
+          then cat /sys/class/net/eth0/address; fi'" % host.rstrip())
+      if not mac:
+        mac, error = run_cmd("ssh %s 'if [ -e /sys/class/net/eno1/address ]; \
+            then cat /sys/class/net/eno1/address; fi'" % host.rstrip())
+      output, error = run_cmd("(grep -i %s %s)" % (mac.rstrip(), output_file))
+      if output:
+        print "%s:\t\t%s" % (host.rstrip(), output.rstrip())
+    f.close()
+
 if __name__ == "__main__":
-  all, host, mac = parse_cmd_args()
+  all, hostid, mac, hostfile = parse_cmd_args()
 
   if all:
     print "getting all info, it takes 1~2 mins ..."
@@ -89,23 +105,23 @@ if __name__ == "__main__":
         proc.join()
     write_list_to_file(nodes, output_file)
     print "host id, MAC and rack id have been stored in %s\n" % output_file
-  elif host:
-    print "searching with host id ..."
-    if os.path.isfile(output_file):
-      output, error = run_cmd("grep -i %s %s" % (host, output_file))
-      if output:
-        print output
-      else:
-        print "No such host id"
-    else:
+  else:
+    if not os.path.isfile(output_file):
       print "%s does not exist, re-run with -a first" % output_file
-  elif mac:
-    print "searching with MAC ..."
-    if os.path.isfile(output_file):
-      output, error = run_cmd("grep -i %s %s" % (mac, output_file))
-      if output:
-        print output
-      else:
-        print "No such MAC"
     else:
-      print "%s does not exist, re-run with -a first" % output_file
+      output = ''
+      error = ''
+      if hostid or mac:
+        if hostid:
+          print "searching with host id ..."
+          output, error = run_cmd("grep -i %s %s" % (hostid, output_file))
+        elif mac:
+          print "searching with MAC ..."
+          output, error = run_cmd("grep -i %s %s" % (mac, output_file))
+        if output:
+          print output.rstrip()
+        else:
+          print "No host found"
+      if hostfile:
+        print "searching for hosts in %s ..." % hostfile
+        searchHosts(hostfile)
