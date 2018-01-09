@@ -26,7 +26,7 @@ cd Chameleon-toolkit
 ## Required Dependencies
 The script requires the following dependencies:
 * Baremetal instance running Ubuntu or CentOS
-* OpenStack RC file. It needs to sourced to collect your username and password. Please download it from [HERE (TACC)](https://chi.tacc.chameleoncloud.org/dashboard/project/access_and_security/) or [HERE (UC)](https://chi.uc.chameleoncloud.org/dashboard/project/access_and_security/) using the "Download OpenStack RC File" button in "API Access" tab.
+* OpenStack RC file. It needs to sourced to collect your username and password. Please download it from [HERE (TACC)](https://chi.tacc.chameleoncloud.org/dashboard/project/api_access/) or [HERE (UC)](https://chi.uc.chameleoncloud.org/dashboard/project/api_access/) using the "Download OpenStack RC File" button in "API Access" tab. Only v2.0 version is supported.
 * `~/nodes` file. `~/nodes` plays an very important role. It is expected to keep record of hostnames of all instances created by you. All following commands and scripts rely on it. **You need to be sure that all instances are listed in the file.**
 ## Optional Dependencies
 **[MPSSH - Mass Parallel Secure Shell](https://github.com/ndenev/mpssh)**
