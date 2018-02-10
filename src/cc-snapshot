@@ -6,29 +6,29 @@ cyan=`tput setaf 6`
 reset=`tput sgr0`
 
 export LIBGUESTFS_BACKEND=direct
-username=`whoami`
-if [ $username != "root" ]
-then
-  echo "Please run this script as root user"
-  exit
-fi
-
-#: ${OS_PASSWORD?"Need to set OS_PASSWORD"}
 
 set -eu
 set -o pipefail
 
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+   exit 1
+fi
+
 PARTITION_IMAGE=false
 
 print_usage() {
-  echo "usage: $0 [-p] snapshot_name"
+  echo "usage: $0 [-p] [-e folder_to_exclude] snapshot_name"
   echo "Optional arguments:"
   echo ""
   echo "  -h        Print this help message"
   echo "  -p        Create a partition image (separate kernel and ramdisk, no MBR)"
+  echo "  -e        Exclude folder while snapshotting (can be used multiple times to exclude multiple folders)"
+  echo ""
+  echo " cc-snapshot version 0.2.0"
 }
 
-while getopts ":hp" opt; do
+while getopts ":hp:e:" opt; do
   case $opt in
     h)
       print_usage
@@ -36,6 +36,9 @@ while getopts ":hp" opt; do
       ;;
     p)
       PARTITION_IMAGE=true
+      ;;
+    e)
+      EXCLUDE_FOLDERS+=("$OPTARG")
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -50,111 +53,104 @@ shift $((OPTIND-1))
 HOSTNAME=$(hostname)
 UUID=$(uuidgen)
 
-IS_UBUNTU=$(UNAME_OUTPUT=$(uname -a | tr '[:upper:]' '[:lower:]' | grep ubuntu); if [ "$UNAME_OUTPUT" != "" ]; then echo "true"; else echo "false"; fi)
-if [ "$IS_UBUNTU" == true ]; then
-    UBUNTU_VERSION=$(lsb_release -c | awk '{print $2}')
-else
-    UBUNTU_VERSION=""
+EXCLUDE_STRING=''
+if [ -n "${EXCLUDE_FOLDERS+x}" ]; then
+    for folder in "${EXCLUDE_FOLDERS[@]}"; do
+        echo "Will exclude folder: $folder"
+        EXCLUDE_STRING+="--exclude $folder "
+    done
 fi
-IS_CENTOS=$(if [ -f /etc/redhat-release ]; then echo "true"; else echo "false"; fi)
 
-#########################################################
-# Generate openrc file that will be used to upload image
-#########################################################
+DISTRO=$(gawk -F= '/^NAME/{print $2}' /etc/os-release | tr -d \"\' | tr ' ' '-')
+UBUNTU='Ubuntu'
+CENTOS='CentOS-Linux'
 
-# The extract_json_key function is in charge of find a key in a flat JSON value.
-# Please note that if the JSON value is not flat, it should return the first value
-# associated to the given key.
-#    $1: String that represents the key
-#    $2: String that represents the JSON value
-#    return: the value of the key in the JSON value
-# example: extract_json_key 'foo' '{"foo": 1, "bar": 2}'
+UBUNTU_VERSION=''
+if [ $DISTRO = $UBUNTU ]; then
+  UBUNTU_VERSION=$(lsb_release -c | awk '{print $2}')
+fi
 
-function extract_json_key {
+# Configure env for glance to upload image
+JSON_VENDOR_DATA=$(curl -s http://169.254.169.254/openstack/latest/vendor_data.json)
+if hash jq 2>/dev/null; then
+  SITE=$(echo $JSON_VENDOR_DATA | jq -r .site)
+  REGION=$(echo $JSON_VENDOR_DATA | jq -r .region)
+  PROJECT_ID=$(echo $JSON_VENDOR_DATA | jq -r .project_id)
+else
+  # jq not available in default xenial repos
+  function extract_json_key {
     RESULT=$(echo "$2" | sed "s/.*$1\": \"//g" | sed 's/".*//g')
     echo "$RESULT"
-}
-
-JSON_VENDOR_DATA=$(curl -s http://169.254.169.254/openstack/latest/vendor_data.json)
-SITE=$(extract_json_key "site" "$JSON_VENDOR_DATA")
-
-if [ "$SITE" != "tacc" ] && [ "$SITE" != "uc" ]; then
-    # The current instance  is apparently not a baremetal node.
-    echo "ERROR: Could not understand which site you are using, please  be sure that you run the script inside a baremetal instance!"
-    exit 1
+  }
+  SITE=$(extract_json_key "site" "$JSON_VENDOR_DATA")
+  REGION=$(extract_json_key "region" "$JSON_VENDOR_DATA")
+  PROJECT_ID=$(extract_json_key "project_id" "$JSON_VENDOR_DATA")
 fi
 
-PROJECT_ID=$(extract_json_key "project_id" "$JSON_VENDOR_DATA")
+if [ "$SITE" != "tacc" ] && [ "$SITE" != "uc" ]; then
+  # The current instance is apparently not a baremetal node.
+  >&2 echo "Error: Could not detect which site you are using (got \"$SITE\")."
+  >&2 echo "cc-snapshot is only supported for baremetal instances."
+  exit 1
+fi
 
-cat > /tmp/openrc <<- EOM
-#!/bin/bash
+export OS_REGION_NAME=$REGION
+if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
 
-# To use an OpenStack cloud you need to authenticate against the Identity
-# service named keystone, which returns a **Token** and **Service Catalog**.
-# The catalog contains the endpoints for all services the user/tenant has
-# access to - such as Compute, Image Service, Identity, Object Storage, Block
-# Storage, and Networking (code-named nova, glance, keystone, swift,
-# cinder, and neutron).
-#
-# *NOTE*: Using the 2.0 *Identity API* does not necessarily mean any other
-# OpenStack API is version 2.0. For example, your cloud provider may implement
-# Image API v1.1, Block Storage API v2, and Compute API v2.0. OS_AUTH_URL is
-# only for the Identity API served through keystone.
+# if [ $KEYSTONE_VERSION = '2' ]; then
 export OS_AUTH_URL=https://chi.$SITE.chameleoncloud.org:5000/v2.0
-
-# With the addition of Keystone we have standardized on the term **tenant**
-# as the entity that owns the resources.
 export OS_TENANT_ID=$PROJECT_ID
+# else #keystone v3 ...migrate to this at some point
+#export OS_AUTH_URL=https://chi.$SITE.chameleoncloud.org:5000/v3
+#export OS_PROJECT_ID=$PROJECT_ID
+#export OS_USER_DOMAIN_NAME="Default"
+# fi
 
-# In addition to the owning entity (tenant), OpenStack stores the entity
-# performing the action as the **user**.
-echo "Please enter your Chameleon username: "
-read -r OS_USERNAME_INPUT
-export OS_USERNAME=\$OS_USERNAME_INPUT
+if [ -z "${OS_USERNAME+x}" ]; then
+  echo "Please enter your Chameleon username: "
+  read -r OS_USERNAME_INPUT
+  export OS_USERNAME=$OS_USERNAME_INPUT
+fi
 
-# With Keystone you pass the keystone password.
-echo "Please enter your Chameleon password: "
-read -sr OS_PASSWORD_INPUT
-export OS_PASSWORD=\$OS_PASSWORD_INPUT
+if [ -z "${OS_PASSWORD+x}" ]; then
+  echo "Please enter your Chameleon password: "
+  read -sr OS_PASSWORD_INPUT
+  export OS_PASSWORD=$OS_PASSWORD_INPUT
+fi
 
-# If your configuration has multiple regions, we set that information here.
-# OS_REGION_NAME is optional and only valid in certain environments.
-export OS_REGION_NAME="regionOne"
-# Don't leave a blank variable, unset it if it was empty
-if [ -z "\$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
-EOM
-
-# set +x
-
-# Source the file that has been generated above
-source /tmp/openrc
+set +e
+glance image-list >/dev/null #2>&1
+if [ ! $? -eq 0 ]; then
+  echo Unable to contact Glance, check username and password
+  exit 1
+fi
+set -e
 
 date=`date +20%y%m%d`
 if [ $# -eq 0 ]; then
-    SNAPSHOT_NAME="${OS_USERNAME}-snapshot-${date}"
+  SNAPSHOT_NAME="${OS_USERNAME}-snapshot-${date}"
 else
-    SNAPSHOT_NAME="$1"
+  SNAPSHOT_NAME="$1"
 fi
 
 echo "Will snapshot the instance using the following name: '$SNAPSHOT_NAME'"
-
-# set -x
 
 #################################
 # Begin the snapshotting process
 #################################
 
 echo "${green}Installing prerequisite ...${reset}"
-if [ "$IS_CENTOS" == true ]; then
-    # Install prerequisite software (only required for XFS file systems, which is the default on CentOS 7):
-    yum install -y libguestfs-xfs lvm2
+if [ $DISTRO = $CENTOS ]; then
+  # Install prerequisite software (only required for XFS file systems, which is the default on CentOS 7):
+  yum install -y libguestfs-xfs
+  yum update -y lvm2 # must be at least 2.02-171 to avoid bug https://bugzilla.redhat.com/show_bug.cgi?id=1475018
 fi
 
 # Create a tar file of the contents of your instance:
 if [ "$UBUNTU_VERSION"=="xenial" ]; then
-   TAR_ARGS=""
+  TAR_ARGS=""
 else
-   TAR_ARGS="--xattrs"
+  TAR_ARGS="--xattrs"
 fi
 
 echo "${green}[1/7] Removing previous snapshots ...${reset}"
@@ -166,35 +162,40 @@ echo "${green}[2/7] Creating tar file ...${reset}"
 n=0
 until [ $n -ge 5 ]
 do
-   tar cf /tmp/snapshot.tar / --selinux --acls $TAR_ARGS --numeric-owner --one-file-system  --exclude=/tmp/snapshot.tar --exclude=/tmp/* --exclude=/proc/* --exclude=/var/tmp/* --exclude=/boot/extlinux && break
-   n=$[$n+1]
-   sleep 15
+  tar cf /tmp/snapshot.tar / --selinux --acls $TAR_ARGS --numeric-owner --one-file-system  \
+    --exclude=/tmp/snapshot.tar \
+    --exclude=/tmp/* \
+    --exclude=/proc/* \
+    --exclude=/var/tmp/* \
+    --exclude=/boot/extlinux \
+    --exclude=/var/lib/cloud \
+    $EXCLUDE_STRING && break
+  n=$[$n+1]
+  sleep 15
 done
 /home/cc/fm.sh
 
-if [ "$UBUNTU_VERSION" == "xenial" ]; then
-   apt-get install -y libguestfs-tools
+if [ $DISTRO = $UBUNTU ]; then
+  if [ $UBUNTU_VERSION = "xenial" ]; then
+    apt-get install -yq libguestfs-tools
+  fi
+
+  # Update guestfs appliances (prevent an error with virt-make-fs);
+  # BUG: one package cannot be found (kpartx) and cause update-guestfs-appliance
+  #      to exit with an error code;
+  apt-get -yq update # APT repos may need an update in order to find kpartx
+  apt-get install -yq kpartx
+  if [ "$(which update-guestfs-appliance)" != "" ]; then
+    update-guestfs-appliance || true
+  fi
+
+  FS="ext4"
+  LABEL=`ls /dev/disk/by-label`
 fi
 
-if [ "$IS_UBUNTU" == true ]; then
-    # Update guestfs appliances (prevent an error with virt-make-fs);
-    # BUG: one package cannot be found (kpartx) and cause update-guestfs-appliance
-    #      to exit with an error code;
-    apt-get -y update # APT repos may need an update in order to find kpartx
-    apt-get install -y kpartx
-    if [ "$(which update-guestfs-appliance)" != "" ]; then
-        update-guestfs-appliance || true
-    fi
-fi
-
-if [ "$IS_CENTOS" == true ]; then
-    FS="xfs"
-    LABEL="img-rootfs"
-fi
-
-if [ "$IS_UBUNTU" == true ]; then
-    FS="ext4"
-    LABEL=`ls /dev/disk/by-label`
+if [ $DISTRO = $CENTOS ]; then
+  FS="xfs"
+  LABEL="img-rootfs"
 fi
 
 ARCH=`uname -i`
@@ -209,27 +210,28 @@ fi
 # to the image, while what we (and Ironic) call partition images are images
 # without MBR, hence the inverted logic with the PARTITION_IMAGE variable.
 if [ "$PARTITION_IMAGE" == false ]; then
-    VIRT_MAKE_FS="virt-make-fs --partition"
+  VIRT_MAKE_FS="virt-make-fs --partition"
 else
-    VIRT_MAKE_FS="virt-make-fs"
+  VIRT_MAKE_FS="virt-make-fs"
 fi
 
-# This will take 3 to 5 minutes. Next, convert the tar file into a qcow2 image (if you don't want to use the XFS file system, you can replace xfs by ext4):
+# This will take 3 to 5 minutes. Next, convert the tar file into a qcow2 image
+# (if you don't want to use the XFS file system, you can replace xfs by ext4):
 echo "${green}[3/7] Converting tar file to qcow2 image ...${reset}"
 $VIRT_MAKE_FS --format=qcow2 --type=$FS --label=$LABEL /tmp/snapshot.tar /tmp/snapshot.qcow2
 /home/cc/fm.sh
 
 echo "${green}[4/7]Ensure GRUB is present ...${reset}"
 if [ "$PARTITION_IMAGE" == false ]; then
-    if [ "$IS_CENTOS" == true ]; then
-        # and looking at the name of the file in that directory. Next ensure that the GRUB bootloader is present in the image:
-        virt-customize -a /tmp/snapshot.qcow2 --run-command 'grub2-install /dev/sda && grub2-mkconfig -o /boot/grub2/grub.cfg'
-    fi
+  if [ $DISTRO = $CENTOS ]; then
+    # and looking at the name of the file in that directory. Next ensure that the GRUB bootloader is present in the image:
+    virt-customize -a /tmp/snapshot.qcow2 --run-command 'grub2-install /dev/sda && grub2-mkconfig -o /boot/grub2/grub.cfg'
+  fi
 
-    if [ "$IS_UBUNTU" == true ]; then
-        # Next ensure that the GRUB bootloader is present in the image:
-        guestfish -a /tmp/snapshot.qcow2 -i sh 'grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg'
-    fi
+  if [ $DISTRO = $UBUNTU ]; then
+    # Next ensure that the GRUB bootloader is present in the image:
+    guestfish -a /tmp/snapshot.qcow2 -i sh 'grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg'
+  fi
 fi
 /home/cc/fm.sh
 
@@ -250,13 +252,20 @@ qemu-img convert /tmp/snapshot.qcow2 -O qcow2 /tmp/snapshot_compressed.qcow2 -c
 # The final steps are to upload your snapshot image to OpenStack Glance.
 echo "${green}[7/7] Uploading image ...${reset}"
 if [ "$PARTITION_IMAGE" == false ]; then
-    glance image-create --progress --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare < /tmp/snapshot_compressed.qcow2
+  glance image-create --progress --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare < /tmp/snapshot_compressed.qcow2
 else
-    echo "You asked for a partition image."
-    echo "You will need to upload your kernel and ramdisk to Glance before uploading your image."
-    echo "You may want to run 'source /tmp/openrc' to set your OpenStack credentials."
-    echo "After kernel and ramdisk are uploaded, run:"
-    echo "glance image-create --name $SNAPSHOT_NAME --disk-format qcow2 --container-format bare --property kernel_id=IMAGE_VMLINUZ_UUID --property ramdisk_id=IMAGE_INITRD_UUID < /tmp/snapshot_compressed.qcow2"
+  echo "You asked for a partition image."
+  echo "You will need to upload your kernel and ramdisk to Glance before uploading your image."
+  echo "You may want to run 'source /tmp/openrc' to set your OpenStack credentials."
+  echo "After kernel and ramdisk are uploaded, run the below, filling in IMAGE_..._UUID:"
+  echo
+  echo "glance image-create \\"
+  echo "  --name $SNAPSHOT_NAME \\"
+  echo "  --disk-format qcow2 \\"
+  echo "  --container-format bare \\"
+  echo "  --property kernel_id=IMAGE_VMLINUZ_UUID \\"
+  echo "  --property ramdisk_id=IMAGE_INITRD_UUID \\"
+  echo "  < /tmp/snapshot_compressed.qcow2"
 fi
 
 exit 0
