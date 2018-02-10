@@ -26,7 +26,7 @@ cd Chameleon-toolkit
 ## Required Dependencies
 The script requires the following dependencies:
 * Baremetal instance running Ubuntu or CentOS
-* OpenStack RC file. It needs to sourced to collect your username and password. Please download it from [HERE (TACC)](https://chi.tacc.chameleoncloud.org/dashboard/project/access_and_security/) or [HERE (UC)](https://chi.uc.chameleoncloud.org/dashboard/project/access_and_security/) using the "Download OpenStack RC File" button in "API Access" tab.
+* OpenStack RC file. It needs to sourced to collect your username and password. Please download it from [HERE (TACC)](https://chi.tacc.chameleoncloud.org/dashboard/project/api_access/) or [HERE (UC)](https://chi.uc.chameleoncloud.org/dashboard/project/api_access/) using the "Download OpenStack RC File" button in "API Access" tab. Only v2.0 version is supported.
 * `~/nodes` file. `~/nodes` plays an very important role. It is expected to keep record of hostnames of all instances created by you. All following commands and scripts rely on it. **You need to be sure that all instances are listed in the file.**
 ## Optional Dependencies
 **[MPSSH - Mass Parallel Secure Shell](https://github.com/ndenev/mpssh)**
@@ -49,6 +49,18 @@ MPSSH can spawn multiple SSH processes to instances and run commands in parallel
     cc-snapshot will ask for your Chameleon password, and after a few minutes, a snapshot will be uploaded in the image repository of the instance's site (UC or TACC).
 * #### sync_hosts.sh
     `sync_hosts.sh` is a script to generate `/etc/hosts` file and synchronize across all instances so that each instance knows its siblings. It needs to be run once when all instances boot up or new instances are added. `sync_hosts.sh` relies on `~/nodes` file as well. **Please be sure `~/nodes` has all instances listed.**
+* #### (NEW) get_placement_rack.py
+    `get_placement_rack.py` is a script to get the rack id of instances. It can help to decide the radius of your instances. The ideal case is all instances are allocated in a single rack without involving cross-rack communication. The usage of this script is
+    ```
+    usage: get_placement_rack.py [-h] [-a | -i HOST | -m MAC]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -a, --all             get host id, MAC and rack id of all nodes
+      -i HOST, --host HOST  get host id, MAC and rack id of host with given id
+      -m MAC, --mac MAC     get host id, MAC and rack id of host with MAC
+    ```
+
 * #### fm.sh
     `fm.sh` is a script to flush the memory cache to guarantee all files are actually read from the storage devices. To use it, simply run
     ```
@@ -66,7 +78,7 @@ MPSSH can spawn multiple SSH processes to instances and run commands in parallel
     sync_folder [-q|--quiet] path
     ```
     **Only one file/path is supported currently. If multiple files/paths are given, only the first one will be synchronized**
-* #### collect
+* #### (NEW) collect
     `collect` is the command to gather files in the same path across all instances to one instance. This is usually used when instance-local files (e.g. data, logs, configurations) need to be opened in one instance.
     ```
     collect [-q|--quiet] file [{-t|--target} target_path]
