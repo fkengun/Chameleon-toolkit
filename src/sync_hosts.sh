@@ -10,8 +10,8 @@ do
       NO_HOSTS_UPDATE=YES
       ;;
     -h|--help)
-      echo "Usage: sync_folder [-q|--quiet] path"
-      return # past argument
+      echo "Usage: sync_hosts.sh [-e|--exist-hosts]"
+      exit
       ;;
     --default)
       DEFAULT=YES
