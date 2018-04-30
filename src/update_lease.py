@@ -48,7 +48,8 @@ def get_lease_info(keyword):
     return lease_info_map
 
 def update_lease(lease_name, prolong_time, id):
-    cmd = "%s lease-update -l %s -p %s %s" % (climate_path, lease_name, prolong_time, id)
+    print "Prolonging lease %s with id %s for %s ..." % (lease_name, id, prolong_time)
+    cmd = "%s lease-update --name %s --prolong-for %s %s" % (climate_path, lease_name, prolong_time, id)
     output, error = run_cmd(cmd)
 
 def email_notification(lease_name):
@@ -72,18 +73,19 @@ if __name__ == "__main__":
         exit()
     else:
         lease_info_map = get_lease_info(keyword)
-        print lease_info_map
         if not len(lease_info_map):
             print "No matched lease found"
             exit()
         if not prolong_time:
-            # check lease and email notification, if necessary
+            # at lease one lease is found, then notify via email
+            print "Number of leases found: %d" % len(lease_info_map)
             lease_names = get_lease_names()
             content = ""
             for id in lease_names:
                 if content:
                     content = "%s, " % content
                 content = "%s%s" % (content, id)
+            print "Sending email notification ..."
             email_notification(content)
         else:
             # update lease
