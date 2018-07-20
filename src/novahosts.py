@@ -20,18 +20,14 @@ elif 'centos' in platform.linux_distribution()[0].lower():
 os_password=os.environ.get('OS_PASSWORD')
 os_auth_url=os.environ.get('OS_AUTH_URL')
 os_username=os.environ.get('OS_USERNAME')
-if IS_CENTOS:
-  os_project=os.environ.get('OS_TENANT_ID')
-elif IS_UBUNTU:
-  os_project=os.environ.get('OS_PROJECT_NAME')
-else:
-  print 'Unsupported platform: {0}'.format(platform.linux_distribution()[0])
+os_project=os.environ.get('OS_PROJECT_ID')
+os_user_domain=os.environ.get('OS_USER_DOMAIN_NAME')
 
-if os_password is None or os_auth_url is None or os_username is None or os_project is None:
+if os_password is None or os_auth_url is None or os_username is None or os_project is None or os_user_domain is None:
   sys.stderr.write("env not found, please source your openrc file first\n")
   sys.exit(-1)
 
-nova = client.Client("2", os_username, os_password, os_project, os_auth_url)
+nova = client.Client("2", os_username, os_password, os_project, os_auth_url, user_domain_name=os_user_domain)
 
 my_servers = nova.servers.list() #search_opts={'OS-EXT-AZ:availability_zone':reservation_name})
 
