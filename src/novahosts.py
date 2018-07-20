@@ -20,11 +20,19 @@ elif 'centos' in platform.linux_distribution()[0].lower():
 os_password=os.environ.get('OS_PASSWORD')
 os_auth_url=os.environ.get('OS_AUTH_URL')
 os_username=os.environ.get('OS_USERNAME')
+os_tenant_id=os.environ.get('OS_TENANT_ID')
+os_tenant_name=os.environ.get('OS_TENANT_NAME')
 os_project=os.environ.get('OS_PROJECT_ID')
 os_user_domain=os.environ.get('OS_USER_DOMAIN_NAME')
 
-if os_password is None or os_auth_url is None or os_username is None or os_project is None or os_user_domain is None:
-  sys.stderr.write("env not found, please source your openrc file first\n")
+if os_password is None or os_auth_url is None or os_username is None:
+  sys.stderr.write("env not found, please source your V3 openrc file first\n")
+  sys.exit(-1)
+elif os_project is None or os_user_domain is None or os_tenant_id is not None or os_tenant_name is not None:
+  sys.stderr.write("Please make sure you source the latest V3 openrc file\n")
+  site = os_auth_url.split('.')[1]
+  download_link_msg = "You can download it from http://chi.{0}.chameleoncloud.org/dashboard/project/api_access/\n".format(site)
+  sys.stderr.write(download_link_msg)
   sys.exit(-1)
 
 nova = client.Client("2", os_username, os_password, os_project, os_auth_url, user_domain_name=os_user_domain)
