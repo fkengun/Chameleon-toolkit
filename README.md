@@ -84,3 +84,14 @@ MPSSH can spawn multiple SSH processes to instances and run commands in parallel
     collect [-q|--quiet] file [{-t|--target} target_path]
     ```
     **If the target path is not specified, the current directory will be set as the default target path**
+
+# Troubleshooting
+
+**`virt-customize: error: libguestfs error: lvs: lvm lvs --help: Invalid units specification`**
+
+* Problem: the LVM2 package is incompatible with libguestfs (see https://bugzilla.redhat.com/show_bug.cgi?id=1475018)
+* Resolution: update the lvm2 package. On CentOS:
+    ```
+    sudo yum makecache
+    sudo yum update lvm2
+    ```
