@@ -86,7 +86,7 @@ echo "**************************************************************************
 echo -e "Helper Scripts and Commands\tNotes"
 echo "--------------------------------------------------------------------------------------"
 echo -e "~/sync_hosts.sh\t\t\tgenerate /etc/hosts file to wire up instances"
-echo -e "~/get_placement_rack.py\t\t\tget rack id of instance"
+echo -e "~/get_placement_rack.py\t\tget rack id of instance"
 echo -e "~/cc-snapshot\t\t\tmake a snapshot image"
 echo -e "sync_file\t\t\tsynchronize file across all instances"
 echo -e "sync_folder\t\t\tsynchronize files in path across all instances"
