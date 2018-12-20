@@ -32,7 +32,7 @@ CC_SNAPSHOT_TAR_PATH=/tmp/snapshot.tar
 CC_SNAPSHOT_CONVERTED_PATH=/tmp/snapshot.qcow2
 CC_SNAPSHOT_CONVERTED_COMPRESSED_PATH=/tmp/snapshot_compressed.qcow2
 # Max snapshot tarball size (MB) for save upload
-CC_SNAPSHOT_MAX_TARBALL_SIZE=8000
+CC_SNAPSHOT_MAX_TARBALL_SIZE=20480
 # ===============================================================================
 
 PARTITION_IMAGE=false
