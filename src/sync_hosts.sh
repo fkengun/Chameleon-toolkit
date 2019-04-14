@@ -24,35 +24,33 @@ done
 
 if [ $NO_HOSTS_UPDATE == NO ]
 then
+  echo "Enter the string used to filter out your instances: "
+  read -e grep_str
+  res=`python ~/novahosts.py $grep_str 2>&1`
+  if [[ $res ]]
+  then
+    echo $res
+    echo "Fail to run novahosts.py"
+    exit -1
+  fi
+  nins=`cat /dev/shm/hosts | wc -l`
+  if [[ $nins == 0 ]]
+  then
+    echo No instance found
+    exit
+  fi
+  echo "These are the instances:"
+  cat /dev/shm/hosts
+  echo "Are they correct? [yes/no]:"
+  read -e correct
   while true
   do
-    echo "Enter the string used to filter out your instances: "
-    read -e grep_str
-    res=`python ~/novahosts.py $grep_str 2>&1`
-    if [[ $res ]]
-    then
-      echo $res
-      echo "Fail to run novahosts.py"
-      exit -1
-    fi
-    nins=`cat /dev/shm/hosts | wc -l`
-    if [[ $nins == 0 ]]
-    then
-      echo No instance found
-      continue
-    fi
-    echo "These are the instances:"
-    cat /dev/shm/hosts
-    echo "Are they correct? [yes/no]:"
-    read -e correct
-    if [[ "$correct" == "yes" ]]
-    then
-      sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts
-      break
-    elif [[ "$correct" == "no" ]]
-    then
-      continue
-    fi
+    read -p "Are they correct? [yes/no]" correct
+    case $correct in
+      [Yy]* ) sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts; break;;
+      [Nn]* ) exit;;
+      * ) echo "Please answer yes or no.";;
+    esac
   done
 fi
 cat /etc/hosts | awk '{print $2}' | sort > ~/nodes
