@@ -374,7 +374,6 @@ qemu-img convert $CC_SNAPSHOT_CONVERTED_PATH -O $CC_SNAPSHOT_DISK_FORMAT $CC_SNA
 echo "${green}[7/7] Uploading image ...${reset}"
 if [ "$PARTITION_IMAGE" == false ]; then
   openstack image create \
-    --progress \
     --disk-format $CC_SNAPSHOT_DISK_FORMAT \
     --container-format bare \
     $SNAPSHOT_NAME <$CC_SNAPSHOT_CONVERTED_COMPRESSED_PATH
