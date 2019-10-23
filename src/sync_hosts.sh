@@ -24,15 +24,15 @@ done
 
 if [ $NO_HOSTS_UPDATE == NO ]
 then
-  echo "Enter the string used to filter out your instances: "
-  read -e grep_str
-  res=`python ~/novahosts.py $grep_str 2>&1`
-  if [[ $res ]]
-  then
-    echo $res
-    echo "Fail to run novahosts.py"
-    exit -1
-  fi
+  #echo "Enter the string used to filter out your instances: "
+  #read -e grep_str
+  #res=`python ~/novahosts.py $grep_str 2>&1`
+  #if [[ $res ]]
+  #then
+  #  echo $res
+  #  echo "Fail to run novahosts.py"
+  #  exit -1
+  #fi
   nins=`cat /dev/shm/hosts | wc -l`
   if [[ $nins == 0 ]]
   then
