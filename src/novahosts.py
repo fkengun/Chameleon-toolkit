@@ -5,6 +5,7 @@ from novaclient import client
 import novaclient
 import sys
 import platform
+import os_client_config
 
 if len(sys.argv) != 2:
   sys.stderr.write("Usage: python novahost.py [filter_string]\n")
@@ -24,6 +25,7 @@ os_tenant_id=os.environ.get('OS_TENANT_ID')
 os_tenant_name=os.environ.get('OS_TENANT_NAME')
 os_project=os.environ.get('OS_PROJECT_ID')
 os_user_domain=os.environ.get('OS_USER_DOMAIN_NAME')
+os_region_name=os.environ.get('OS_REGION_NAME')
 
 if os_password is None or os_auth_url is None or os_username is None:
   sys.stderr.write("env not found, please source your V3 openrc file first\n")
@@ -35,7 +37,7 @@ elif os_project is None or os_user_domain is None or os_tenant_id is not None or
   sys.stderr.write(download_link_msg)
   sys.exit(-1)
 
-nova = client.Client("2", os_username, os_password, os_project, os_auth_url, user_domain_name=os_user_domain)
+nova = os_client_config.make_client('compute', auth_url=os_auth_url, username=os_username, password=os_password, project_name=os_project, region_name=os_region_name)
 
 my_servers = nova.servers.list() #search_opts={'OS-EXT-AZ:availability_zone':reservation_name})
 
