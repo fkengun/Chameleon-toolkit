@@ -39,13 +39,13 @@ then
     echo No instance found
     exit
   fi
-  echo "These are the instances:"
+  #echo "These are the instances:"
   cat /dev/shm/hosts
-  echo "Are they correct? [yes/no]:"
-  read -e correct
+  #echo "Are they correct? [yes/no]:"
+  #read -e correct
   while true
   do
-    read -p "Are they correct? [yes/no]" correct
+    read -p "Are they correct? [yes/no] " correct
     case $correct in
       [Yy]* ) sudo sh -c "cat /dev/shm/hosts > /etc/hosts" && rm -f /dev/shm/hosts; break;;
       [Nn]* ) exit;;
